@@ -673,6 +673,13 @@ export default function BunMap() {
               // Sort favorites first
               if (a.favorite && !b.favorite) return -1
               if (!a.favorite && b.favorite) return 1
+              
+              // Then sort by whether they have buns (bunTypes is not empty)
+              const aHasBuns = a.bunTypes.length > 0
+              const bHasBuns = b.bunTypes.length > 0
+              if (aHasBuns && !bHasBuns) return -1
+              if (!aHasBuns && bHasBuns) return 1
+              
               return 0
             })
             .map(store => (
@@ -817,7 +824,7 @@ export default function BunMap() {
           onClick={centerOnUserLocation}
           style={{
             position: 'absolute',
-            bottom: '30px',
+            bottom: '120px',
             right: '20px',
             zIndex: 1000,
             background: 'white',
