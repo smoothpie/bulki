@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import PWARegistration from '@/components/PWARegistration'
 
 const BunMap = dynamic(() => import('@/components/BunMap'), {
   ssr: false,
@@ -18,5 +19,10 @@ const BunMap = dynamic(() => import('@/components/BunMap'), {
 })
 
 export default function Home() {
-  return <BunMap />
+  return (
+    <>
+      <PWARegistration />
+      <BunMap />
+    </>
+  )
 }
