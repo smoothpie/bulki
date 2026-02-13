@@ -140,6 +140,26 @@ function MapController({ center }: { center: { lat: number; lng: number } | null
   return null
 }
 
+// Russian pluralization helper
+function getPluralForm(count: number) {
+  const lastDigit = count % 10
+  const lastTwoDigits = count % 100
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+    return 'находок' // 11-19: находок
+  }
+  
+  if (lastDigit === 1) {
+    return 'находка' // 1, 21, 31...: находка
+  }
+  
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return 'находки' // 2-4, 22-24...: находки
+  }
+  
+  return 'находок' // 0, 5-20, 25-30...: находок
+}
+
 export default function BunMap() {
   const [stores, setStores] = useState<Store[]>([])
   const [bunTypes, setBunTypes] = useState<string[]>(['🥥 Кокосовая булотька', '🍫 Шоколадная булотька', '🍒 Вишневая булотька'])
@@ -182,24 +202,24 @@ export default function BunMap() {
     }
   }, [])
 
-  function loadData() {
+  async function loadData() {
     try {
-      const storesData = localStorage.getItem('tbilisi-bun-stores')
-      const typesData = localStorage.getItem('tbilisi-bun-types')
+      const response = await fetch('/api/stores')
+      const data = await response.json()
       
       let loadedStores = []
-      if (storesData) {
-        loadedStores = JSON.parse(storesData)
+      if (data.stores) {
+        loadedStores = data.stores
       } else {
-        // If no stores in storage, load SPAR stores by default
+        // If no stores in database, load SPAR stores by default
         loadedStores = [...sparStores]
-        localStorage.setItem('tbilisi-bun-stores', JSON.stringify(loadedStores))
+        await saveStores(loadedStores)
       }
       
       setStores(loadedStores)
       
-      if (typesData) {
-        setBunTypes(JSON.parse(typesData))
+      if (data.bunTypes) {
+        setBunTypes(data.bunTypes)
       }
     } catch (error) {
       console.error('Error loading data:', error)
@@ -208,18 +228,26 @@ export default function BunMap() {
     }
   }
 
-  function saveStores(newStores: Store[]) {
+  async function saveStores(newStores: Store[]) {
     try {
-      localStorage.setItem('tbilisi-bun-stores', JSON.stringify(newStores))
+      await fetch('/api/stores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ stores: newStores })
+      })
       setStores(newStores)
     } catch (error) {
       console.error('Error saving stores:', error)
     }
   }
 
-  function saveBunTypes(types: string[]) {
+  async function saveBunTypes(types: string[]) {
     try {
-      localStorage.setItem('tbilisi-bun-types', JSON.stringify(types))
+      await fetch('/api/stores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bunTypes: types })
+      })
       setBunTypes(types)
     } catch (error) {
       console.error('Error saving bun types:', error)
@@ -417,7 +445,7 @@ export default function BunMap() {
           textAlign: 'center',
           lineHeight: 1.2
         }}>
-          Дашин фэйс когда<br />{stores.filter(s => s.favorite).length} булочных находок
+          Дашин фэйс когда<br />{stores.filter(s => s.favorite).length} {stores.filter(s => s.favorite).length === 1 ? 'булочная' : 'булочных'} {getPluralForm(stores.filter(s => s.favorite).length)}
         </div>
         <div style={{ transform: 'scale(0.7)' }}>
           <TigerCharacter favoriteCount={stores.filter(s => s.favorite).length} />
