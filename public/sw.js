@@ -1,6 +1,5 @@
-const CACHE_NAME = 'bulki-cache-v1'
+const CACHE_NAME = 'bulki-cache-v2'
 const urlsToCache = [
-  '/',
   '/manifest.json',
   '/icon-192.svg',
   '/icon-512.svg'
@@ -8,6 +7,7 @@ const urlsToCache = [
 
 // Install event - cache assets
 self.addEventListener('install', (event) => {
+  self.skipWaiting() // Activate immediately
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -20,16 +20,21 @@ self.addEventListener('install', (event) => {
   )
 })
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    caches.match(event.request)
+    fetch(event.request)
       .then((response) => {
-        // Cache hit - return response
-        if (response) {
-          return response
-        }
-        return fetch(event.request)
+        // Clone the response before caching
+        const responseToCache = response.clone()
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache)
+        })
+        return response
+      })
+      .catch(() => {
+        // If network fails, try cache
+        return caches.match(event.request)
       })
   )
 })
@@ -46,6 +51,6 @@ self.addEventListener('activate', (event) => {
           }
         })
       )
-    })
+    }).then(() => self.clients.claim()) // Take control immediately
   )
 })
