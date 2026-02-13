@@ -140,7 +140,7 @@ function MapController({ center }: { center: { lat: number; lng: number } | null
   return null
 }
 
-// Russian pluralization helper
+// Russian pluralization helper for noun
 function getPluralForm(count: number) {
   const lastDigit = count % 10
   const lastTwoDigits = count % 100
@@ -158,6 +158,26 @@ function getPluralForm(count: number) {
   }
   
   return 'находок' // 0, 5-20, 25-30...: находок
+}
+
+// Russian pluralization helper for adjective "булочная"
+function getAdjectiveForm(count: number) {
+  const lastDigit = count % 10
+  const lastTwoDigits = count % 100
+  
+  if (lastTwoDigits >= 11 && lastTwoDigits <= 19) {
+    return 'булочных' // 11-19: булочных
+  }
+  
+  if (lastDigit === 1) {
+    return 'булочная' // 1, 21, 31...: булочная
+  }
+  
+  if (lastDigit >= 2 && lastDigit <= 4) {
+    return 'булочные' // 2-4, 22-24...: булочные
+  }
+  
+  return 'булочных' // 0, 5-20, 25-30...: булочных
 }
 
 export default function BunMap() {
@@ -445,7 +465,7 @@ export default function BunMap() {
           textAlign: 'center',
           lineHeight: 1.2
         }}>
-          Дашин фэйс когда<br />{stores.filter(s => s.favorite).length} {stores.filter(s => s.favorite).length === 1 ? 'булочная' : 'булочных'} {getPluralForm(stores.filter(s => s.favorite).length)}
+          Дашин фэйс когда<br />{stores.filter(s => s.favorite).length} {getAdjectiveForm(stores.filter(s => s.favorite).length)} {getPluralForm(stores.filter(s => s.favorite).length)}
         </div>
         <div style={{ transform: 'scale(0.7)' }}>
           <TigerCharacter favoriteCount={stores.filter(s => s.favorite).length} />
